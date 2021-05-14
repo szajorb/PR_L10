@@ -1,39 +1,60 @@
 import React, {Component} from "react";
-
+const axios = require('axios');
 
 class LoginForm extends Component {
 
-    state = {
-        account: {
-            username: "",
-            password: ""
-        },
-        errors: {}
-    };
+   state = {
+       account: {
+           username: "",
+           password: ""
+       },
+       errors: {}
+   };
+   handleChangeRoute = () => {
+       this.props.history.push('/');
+   };
 
-    validate = () => {
-      const errors = {};
 
-      const { account } = this.state;
-      if (account.username.trim() === '') {
-          errors.username = 'Username is required!';
-      }
-      if (account.password.trim() === '') {
-          errors.password = 'Password is required!';
-      }
+   validate = () => {
+       const errors = {};
 
-      return Object.keys(errors).length === 0 ? null : errors;
-    };
+       const {account} = this.state;
+       if (account.username.trim() === '') {
+           errors.username = 'Username is required!';
+       }
+       if (account.password.trim() === '') {
+           errors.password = 'Password is required!';
+       }
 
-    handleSubmit = (event) => {
-        event.preventDefault();
+       return Object.keys(errors).length === 0 ? null : errors;
+   };
 
-        const errors = this.validate();
-        this.setState({errors: errors || {}});
-        if (errors) return;
+   handleSubmit = (event) => {
+       event.preventDefault();
 
-        console.log("submit - np. zapytanie do serwera");
-    };
+       const errors = this.validate();
+       this.setState({errors: errors || {}});
+       if (errors) return;
+
+       axios({
+           method: 'post',
+           url: 'http://localhost:3001/api/user/auth',
+           data: {
+               login: this.state.account.username,
+               password: this.state.account.password
+           }
+      }).then((response) => {
+           localStorage.setItem('token', response.data.token);
+           this.handleChangeRoute();
+       }).catch((error) => {
+           const errors = {};
+           errors.password = 'Given username does\'t exists or password is wrong!';
+           this.setState({errors: errors || {}});
+           console.log(error);
+       });
+
+   };
+
 
     handleChange = (event) => {
         const account = {...this.state.account};
